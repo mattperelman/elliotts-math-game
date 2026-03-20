@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elliott's Labubu Math Quest</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --knicks-blue: #006BB6;
+    --knicks-orange: #F58426;
+    --knicks-dark: #003B73;
+    --swift-purple: #9B59B6;
+    --swift-pink: #E91E8C;
+    --gold: #FFD700;
+    --bg-gradient: linear-gradient(135deg, #006BB6 0%, #003B73 40%, #1a1a2e 100%);
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg-gradient);
+    min-height: 100vh;
+    overflow-x: hidden;
+    color: white;
+  }
+
+  .stars {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .star {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--dur) ease-in-out infinite;
+    opacity: 0;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.5); }
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    display: none;
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+  }
+  .screen.active { display: flex; }
+
+  /* ── WELCOME SCREEN ── */
+  #welcome {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    gap: 1.5rem;
+  }
+
+  .welcome-labubu {
+    width: 160px;
+    height: 160px;
+    animation: bounce 2s ease-in-out infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+
+  .game-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    background: linear-gradient(135deg, var(--knicks-orange), var(--gold), var(--swift-pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    line-height: 1.2;
+  }
+
+  .game-title .subtitle {
+    display: block;
+    font-size: 0.5em;
+    background: linear-gradient(135deg, var(--swift-purple), var(--swift-pink));
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .welcome-text {
+    font-size: 1.2rem;
+    color: rgba(255,255,255,0.85);
+    max-width: 500px;
+    line-height: 1.6;
+  }
+
+  .btn {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    padding: 16px 48px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn:hover { transform: scale(1.05); }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-play {
+    background: linear-gradient(135deg, var(--knicks-orange), #ff6b35);
+    color: white;
+    box-shadow: 0 6px 25px rgba(245, 132, 38, 0.5);
+  }
+
+  .btn-play::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: linear-gradient(transparent, rgba(255,255,255,0.1), transparent);
+    transform: rotate(45deg);
+    animation: shimmer 3s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) rotate(45deg); }
+  }
+
+  /* ── GAME SCREEN ── */
+  #game {
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 1rem 2rem;
+    gap: 1rem;
+  }
+
+  .game-header {
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+  }
+
+  .score-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    color: var(--gold);
+  }
+
+  .streak-display {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    color: var(--knicks-orange);
+  }
+
+  .level-display {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    color: var(--swift-pink);
+    background: rgba(233, 30, 140, 0.15);
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(233, 30, 140, 0.3);
+  }
+
+  .difficulty-bar-container {
+    width: 100%;
+    max-width: 700px;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .difficulty-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #4ade80, var(--gold), var(--knicks-orange), var(--swift-pink), #ef4444);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  .question-card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 24px;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 700px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .question-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--knicks-blue), var(--knicks-orange), var(--swift-pink));
+  }
+
+  .question-label {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 1rem;
+  }
+
+  .question-text {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    color: white;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .question-text .operator {
+    color: var(--knicks-orange);
+    margin: 0 0.2em;
+  }
+
+  .answer-section {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .answer-input {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2rem;
+    width: 160px;
+    padding: 12px 20px;
+    border: 3px solid rgba(255,255,255,0.2);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    text-align: center;
+    outline: none;
+    transition: all 0.3s;
+  }
+
+  .answer-input:focus {
+    border-color: var(--knicks-orange);
+    box-shadow: 0 0 20px rgba(245, 132, 38, 0.3);
+  }
+
+  .answer-input.correct {
+    border-color: #4ade80;
+    box-shadow: 0 0 25px rgba(74, 222, 128, 0.4);
+    animation: correctPulse 0.5s;
+  }
+
+  .answer-input.wrong {
+    border-color: #ef4444;
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.4);
+    animation: shake 0.5s;
+  }
+
+  @keyframes correctPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-8px); }
+    40%, 80% { transform: translateX(8px); }
+  }
+
+  .btn-submit {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    padding: 12px 32px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--knicks-orange), #ff6b35);
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-submit:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(245,132,38,0.4); }
+
+  .feedback {
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+  }
+
+  .feedback.correct-fb { color: #4ade80; }
+  .feedback.wrong-fb { color: #ff6b6b; }
+
+  .correct-answer-reveal {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.7);
+    margin-top: 0.25rem;
+  }
+
+  /* ── LABUBU REWARD POPUP ── */
+  .reward-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+  }
+
+  .reward-overlay.active { display: flex; }
+
+  .reward-card {
+    background: linear-gradient(135deg, #1a1a3e, #2d2d5e);
+    border: 2px solid var(--gold);
+    border-radius: 24px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .reward-card::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    background: linear-gradient(45deg, var(--gold), var(--knicks-orange), var(--swift-pink), var(--swift-purple), var(--gold));
+    border-radius: 24px;
+    z-index: -1;
+    background-size: 400%;
+    animation: borderGlow 3s linear infinite;
+  }
+
+  @keyframes borderGlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  @keyframes popIn {
+    0% { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .reward-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5rem;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+
+  .reward-labubu-container {
+    margin: 1rem 0;
+    position: relative;
+  }
+
+  .reward-labubu {
+    width: 120px;
+    height: 120px;
+    animation: rewardBounce 1s ease-in-out infinite;
+  }
+
+  @keyframes rewardBounce {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-10px) rotate(2deg); }
+  }
+
+  .reward-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    margin: 0.5rem 0 0.25rem;
+  }
+
+  .reward-points {
+    font-size: 1.1rem;
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .reward-message {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.7);
+    margin: 0.75rem 0 1.25rem;
+    font-style: italic;
+  }
+
+  .btn-continue {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    padding: 10px 36px;
+    border: none;
+    border-radius: 50px;
+    background: linear-gradient(135deg, var(--swift-purple), var(--swift-pink));
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-continue:hover { transform: scale(1.05); }
+
+  /* ── COLLECTION BAR ── */
+  .collection-section {
+    width: 100%;
+    max-width: 700px;
+  }
+
+  .collection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .collection-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .collection-count {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .collection-grid {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 12px;
+    min-height: 60px;
+    align-items: center;
+  }
+
+  .collected-labubu {
+    width: 44px;
+    height: 44px;
+    transition: transform 0.2s;
+    animation: collectPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .collected-labubu:hover { transform: scale(1.3); }
+
+  @keyframes collectPop {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+  }
+
+  .empty-collection {
+    color: rgba(255,255,255,0.3);
+    font-size: 0.9rem;
+    width: 100%;
+    text-align: center;
+    padding: 0.5rem;
+  }
+
+  /* ── CONFETTI ── */
+  .confetti-piece {
+    position: fixed;
+    z-index: 200;
+    pointer-events: none;
+    animation: confettiFall var(--fall-dur) linear forwards;
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ── GAME OVER SCREEN ── */
+  #gameover {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    gap: 1.5rem;
+  }
+
+  .final-score {
+    font-family: 'Fredoka One', cursive;
+    font-size: 3rem;
+    color: var(--gold);
+  }
+
+  .final-stats {
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.8);
+    line-height: 1.8;
+  }
+
+  .final-collection {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 500px;
+    margin: 1rem 0;
+  }
+
+  .final-collection .collected-labubu {
+    width: 50px;
+    height: 50px;
+  }
+
+  .btn-restart {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.2rem;
+    padding: 14px 40px;
+    border: none;
+    border-radius: 50px;
+    background: linear-gradient(135deg, var(--knicks-blue), var(--knicks-dark));
+    color: white;
+    cursor: pointer;
+    border: 2px solid var(--knicks-orange);
+    transition: all 0.2s;
+  }
+
+  .btn-restart:hover { transform: scale(1.05); background: linear-gradient(135deg, var(--knicks-orange), #ff6b35); }
+
+  /* ── KNICKS BADGE ── */
+  .knicks-badge {
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.3);
+    z-index: 1;
+  }
+
+  /* ── PARTICLES ON CORRECT ── */
+  .particle {
+    position: fixed;
+    pointer-events: none;
+    border-radius: 50%;
+    z-index: 50;
+    animation: particleBurst var(--dur) ease-out forwards;
+  }
+
+  @keyframes particleBurst {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<!-- WELCOME SCREEN -->
+<div class="screen active" id="welcome">
+  <svg class="welcome-labubu" viewBox="0 0 200 200">
+    <defs>
+      <linearGradient id="welcomeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#F58426"/>
+        <stop offset="100%" style="stop-color:#ff6b35"/>
+      </linearGradient>
+    </defs>
+    <!-- Ears -->
+    <ellipse cx="70" cy="45" rx="22" ry="35" fill="url(#welcomeGrad)" transform="rotate(-15, 70, 45)"/>
+    <ellipse cx="130" cy="45" rx="22" ry="35" fill="url(#welcomeGrad)" transform="rotate(15, 130, 45)"/>
+    <ellipse cx="70" cy="45" rx="14" ry="24" fill="#ffb380" transform="rotate(-15, 70, 45)"/>
+    <ellipse cx="130" cy="45" rx="14" ry="24" fill="#ffb380" transform="rotate(15, 130, 45)"/>
+    <!-- Body -->
+    <ellipse cx="100" cy="115" rx="58" ry="65" fill="url(#welcomeGrad)"/>
+    <!-- Belly -->
+    <ellipse cx="100" cy="130" rx="38" ry="40" fill="#ffcc88" opacity="0.5"/>
+    <!-- Eyes -->
+    <circle cx="80" cy="100" r="11" fill="white"/>
+    <circle cx="120" cy="100" r="11" fill="white"/>
+    <circle cx="82" cy="99" r="7" fill="#1a1a2e"/>
+    <circle cx="122" cy="99" r="7" fill="#1a1a2e"/>
+    <circle cx="84" cy="96" r="2.5" fill="white"/>
+    <circle cx="124" cy="96" r="2.5" fill="white"/>
+    <!-- Pouty mouth -->
+    <path d="M88 118 Q94 126 100 118 Q106 126 112 118" stroke="#1a1a2e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <!-- Tiny teeth -->
+    <rect x="95" y="118" width="4" height="4" rx="1" fill="white"/>
+    <rect x="101" y="118" width="4" height="4" rx="1" fill="white"/>
+    <!-- Blush -->
+    <ellipse cx="68" cy="112" rx="9" ry="6" fill="#ff9999" opacity="0.5"/>
+    <ellipse cx="132" cy="112" rx="9" ry="6" fill="#ff9999" opacity="0.5"/>
+    <!-- Arms -->
+    <ellipse cx="50" cy="130" rx="12" ry="8" fill="url(#welcomeGrad)" transform="rotate(-20, 50, 130)"/>
+    <ellipse cx="150" cy="130" rx="12" ry="8" fill="url(#welcomeGrad)" transform="rotate(20, 150, 130)"/>
+    <!-- Feet -->
+    <ellipse cx="80" cy="175" rx="16" ry="10" fill="url(#welcomeGrad)"/>
+    <ellipse cx="120" cy="175" rx="16" ry="10" fill="url(#welcomeGrad)"/>
+  </svg>
+  <h1 class="game-title">
+    Elliott's Labubu<br>Math Quest
+    <span class="subtitle">Multiplication Edition</span>
+  </h1>
+  <p class="welcome-text">
+    Answer multiplication questions to collect colorful Labubus!
+    Each one is worth different points. How many can you collect? Let's go! 🏀✨
+  </p>
+  <button class="btn btn-play" onclick="startGame()">Let's Play!</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen" id="game">
+  <div class="game-header">
+    <div class="score-display">⭐ <span id="score">0</span></div>
+    <div class="level-display" id="levelDisplay">Level 1 - Warm Up</div>
+    <div class="streak-display">🔥 <span id="streak">0</span></div>
+  </div>
+  <div class="difficulty-bar-container">
+    <div class="difficulty-bar" id="difficultyBar" style="width: 5%"></div>
+  </div>
+  <div class="question-card">
+    <div class="question-label">Question <span id="questionNum">1</span></div>
+    <div class="question-text" id="questionText">
+      <span id="num1">2</span> <span class="operator">&times;</span> <span id="num2">3</span> <span class="operator">=</span> <span class="operator">?</span>
+    </div>
+    <div class="answer-section">
+      <input type="number" class="answer-input" id="answerInput" placeholder="?" autocomplete="off">
+      <button class="btn-submit" onclick="checkAnswer()">Go!</button>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="correct-answer-reveal" id="correctReveal"></div>
+  </div>
+
+  <div class="collection-section">
+    <div class="collection-header">
+      <span class="collection-title">🧸 Elliott's Labubu Collection</span>
+      <span class="collection-count" id="collectionCount">0 collected</span>
+    </div>
+    <div class="collection-grid" id="collectionGrid">
+      <div class="empty-collection">Answer questions correctly to collect Labubus!</div>
+    </div>
+  </div>
+</div>
+
+<!-- REWARD OVERLAY -->
+<div class="reward-overlay" id="rewardOverlay">
+  <div class="reward-card">
+    <div class="reward-title">🎉 New Labubu!</div>
+    <div class="reward-labubu-container">
+      <svg class="reward-labubu" id="rewardLabubuSvg" viewBox="0 0 200 200"></svg>
+    </div>
+    <div class="reward-name" id="rewardName"></div>
+    <div class="reward-points" id="rewardPoints"></div>
+    <div class="reward-message" id="rewardMessage"></div>
+    <button class="btn-continue" onclick="closeReward()">Collect! 🧸</button>
+  </div>
+</div>
+
+<!-- GAME OVER SCREEN -->
+<div class="screen" id="gameover">
+  <h1 class="game-title">Amazing Job, Elliott!</h1>
+  <div class="final-score" id="finalScore">0</div>
+  <div class="final-stats" id="finalStats"></div>
+  <div class="final-collection" id="finalCollection"></div>
+  <button class="btn btn-play" onclick="startGame()">Play Again!</button>
+</div>
+
+<div class="knicks-badge">🏀 Go Knicks! 🧡💙</div>
+
+<script>
+const LABUBU_COLORS = [
+  { name: 'Knicks Orange', body: '#F58426', inner: '#ffcc88', points: 10, rarity: 'common' },
+  { name: 'Knicks Blue',   body: '#006BB6', inner: '#66b3e8', points: 15, rarity: 'common' },
+  { name: 'Swiftie Purple', body: '#9B59B6', inner: '#d2a3e0', points: 20, rarity: 'uncommon' },
+  { name: 'Swiftie Pink',  body: '#E91E8C', inner: '#f5a0d0', points: 25, rarity: 'uncommon' },
+  { name: 'Sunshine Gold', body: '#FFD700', inner: '#fff4b3', points: 30, rarity: 'rare' },
+  { name: 'Mint Green',    body: '#2ECC71', inner: '#a3f0c5', points: 20, rarity: 'uncommon' },
+  { name: 'Coral Red',     body: '#E74C3C', inner: '#f5a9a2', points: 25, rarity: 'uncommon' },
+  { name: 'Sky Blue',      body: '#3498DB', inner: '#a8d4f0', points: 15, rarity: 'common' },
+  { name: 'Lavender Dream', body: '#A78BFA', inner: '#d4c5f9', points: 30, rarity: 'rare' },
+  { name: 'Peach Glow',    body: '#FB923C', inner: '#fdd0a0', points: 20, rarity: 'uncommon' },
+  { name: 'Rose Quartz',   body: '#F472B6', inner: '#fbb6d5', points: 25, rarity: 'uncommon' },
+  { name: 'Ocean Teal',    body: '#14B8A6', inner: '#86e0d5', points: 30, rarity: 'rare' },
+  { name: 'Midnight Star',  body: '#6366F1', inner: '#b3b5f7', points: 40, rarity: 'rare' },
+  { name: 'Cherry Blossom', body: '#EC4899', inner: '#f9b3d7', points: 35, rarity: 'rare' },
+  { name: 'Diamond Sparkle', body: '#E2E8F0', inner: '#ffffff', points: 50, rarity: 'legendary', sparkle: true },
+  { name: 'Rainbow Magic',   body: 'url(#rainbowGrad)', inner: '#ffe0f0', points: 100, rarity: 'legendary', rainbow: true },
+];
+
+const CORRECT_MESSAGES = [
+  "Shake it off, Elliott! 🎵",
+  "Nothing but net! 🏀",
+  "You're a Cruel Summer of math skills! ☀️",
+  "Elliott Perelman for three! 🏀",
+  "This is your ERA of math! ✨",
+  "Knicks would draft you! 🧡",
+  "Bejeweled brain! 💎",
+  "Anti-Hero? More like MATH HERO! 🦸‍♀️",
+  "You belong with us (math champions)! 🏆",
+  "Jalen Brunson approves! 🏀",
+  "Enchanted by your math skills! ✨",
+  "MSG is going wild for Elliott! 🏟️",
+  "Wildest Dreams come true! 🌟",
+  "You're in your math era! 💜",
+  "Slam dunk answer! 🏀",
+  "Look what you made me do... give you points! 🎵",
+];
+
+const WRONG_MESSAGES = [
+  "Almost! Shake it off and try the next one! 🎵",
+  "Not quite — but the Knicks miss shots too and they keep going! 🏀",
+  "It's okay, even Taylor has bad takes sometimes! 💜",
+  "Oops! But hey, every champion misses sometimes!",
+  "Keep going Elliott — you've got this! 🌟",
+  "That's okay! The next one is yours! 💪",
+];
+
+const LEVEL_NAMES = [
+  "Warm Up",
+  "Getting Started",
+  "On a Roll",
+  "Heating Up",
+  "On Fire",
+  "Math Star",
+  "Knicks MVP",
+  "Swiftie Scholar",
+  "Labubu Legend",
+  "Math Queen",
+];
+
+let state = {};
+
+function initState() {
+  state = {
+    score: 0,
+    streak: 0,
+    bestStreak: 0,
+    questionsAnswered: 0,
+    questionsCorrect: 0,
+    collection: [],
+    currentAnswer: 0,
+    difficulty: 1,
+    totalQuestions: 25,
+    num1: 0,
+    num2: 0,
+  };
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame() {
+  initState();
+  showScreen('game');
+  updateUI();
+  generateQuestion();
+  document.getElementById('answerInput').focus();
+}
+
+function getDifficultyParams() {
+  const correct = state.questionsCorrect;
+
+  if (correct < 3)  return { maxFactor: 5,  minFactor: 1, label: 0 };
+  if (correct < 6)  return { maxFactor: 6,  minFactor: 1, label: 1 };
+  if (correct < 9)  return { maxFactor: 7,  minFactor: 2, label: 2 };
+  if (correct < 12) return { maxFactor: 8,  minFactor: 2, label: 3 };
+  if (correct < 15) return { maxFactor: 9,  minFactor: 2, label: 4 };
+  if (correct < 18) return { maxFactor: 10, minFactor: 3, label: 5 };
+  if (correct < 21) return { maxFactor: 11, minFactor: 3, label: 6 };
+  if (correct < 24) return { maxFactor: 12, minFactor: 4, label: 7 };
+  if (correct < 27) return { maxFactor: 12, minFactor: 5, label: 8 };
+  return { maxFactor: 12, minFactor: 6, label: 9 };
+}
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateQuestion() {
+  const params = getDifficultyParams();
+  state.num1 = randInt(params.minFactor, params.maxFactor);
+  state.num2 = randInt(params.minFactor, params.maxFactor);
+  state.currentAnswer = state.num1 * state.num2;
+
+  document.getElementById('num1').textContent = state.num1;
+  document.getElementById('num2').textContent = state.num2;
+  document.getElementById('questionNum').textContent = state.questionsAnswered + 1;
+  document.getElementById('answerInput').value = '';
+  document.getElementById('answerInput').className = 'answer-input';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('correctReveal').textContent = '';
+
+  const levelIdx = params.label;
+  const levelName = LEVEL_NAMES[levelIdx] || LEVEL_NAMES[LEVEL_NAMES.length - 1];
+  document.getElementById('levelDisplay').textContent = `Level ${levelIdx + 1} - ${levelName}`;
+
+  const pct = Math.min(100, ((state.questionsCorrect) / 27) * 100);
+  document.getElementById('difficultyBar').style.width = pct + '%';
+
+  document.getElementById('answerInput').focus();
+}
+
+function pickLabubu() {
+  const streak = state.streak;
+  let pool;
+  if (streak >= 8) {
+    pool = LABUBU_COLORS.filter(l => l.rarity === 'legendary');
+  } else if (streak >= 5) {
+    pool = LABUBU_COLORS.filter(l => l.rarity === 'rare' || l.rarity === 'legendary');
+  } else if (streak >= 3) {
+    pool = LABUBU_COLORS.filter(l => l.rarity !== 'legendary');
+  } else {
+    pool = LABUBU_COLORS.filter(l => l.rarity === 'common' || l.rarity === 'uncommon');
+  }
+  const chosen = pool[randInt(0, pool.length - 1)];
+  const multiplier = streak >= 5 ? 2 : streak >= 3 ? 1.5 : 1;
+  return { ...chosen, earnedPoints: Math.round(chosen.points * multiplier) };
+}
+
+function generateLabubuSVG(color, size = 200) {
+  const bodyFill = color.rainbow ? 'url(#rainbowGrad)' : color.body;
+  const innFill = color.inner;
+  return `
+    <defs>
+      <linearGradient id="rainbowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#ff6b6b"/>
+        <stop offset="20%" style="stop-color:#ffd93d"/>
+        <stop offset="40%" style="stop-color:#6BCB77"/>
+        <stop offset="60%" style="stop-color:#4D96FF"/>
+        <stop offset="80%" style="stop-color:#9B59B6"/>
+        <stop offset="100%" style="stop-color:#E91E8C"/>
+      </linearGradient>
+    </defs>
+    <ellipse cx="70" cy="45" rx="22" ry="35" fill="${bodyFill}" transform="rotate(-15, 70, 45)"/>
+    <ellipse cx="130" cy="45" rx="22" ry="35" fill="${bodyFill}" transform="rotate(15, 130, 45)"/>
+    <ellipse cx="70" cy="45" rx="14" ry="24" fill="${innFill}" transform="rotate(-15, 70, 45)"/>
+    <ellipse cx="130" cy="45" rx="14" ry="24" fill="${innFill}" transform="rotate(15, 130, 45)"/>
+    <ellipse cx="100" cy="115" rx="58" ry="65" fill="${bodyFill}"/>
+    <ellipse cx="100" cy="130" rx="38" ry="40" fill="${innFill}" opacity="0.45"/>
+    <circle cx="80" cy="100" r="11" fill="white"/>
+    <circle cx="120" cy="100" r="11" fill="white"/>
+    <circle cx="82" cy="99" r="7" fill="#1a1a2e"/>
+    <circle cx="122" cy="99" r="7" fill="#1a1a2e"/>
+    <circle cx="84" cy="96" r="2.5" fill="white"/>
+    <circle cx="124" cy="96" r="2.5" fill="white"/>
+    <path d="M88 118 Q94 126 100 118 Q106 126 112 118" stroke="#1a1a2e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <rect x="95" y="118" width="4" height="4" rx="1" fill="white"/>
+    <rect x="101" y="118" width="4" height="4" rx="1" fill="white"/>
+    <ellipse cx="68" cy="112" rx="9" ry="6" fill="#ff9999" opacity="0.4"/>
+    <ellipse cx="132" cy="112" rx="9" ry="6" fill="#ff9999" opacity="0.4"/>
+    <ellipse cx="50" cy="130" rx="12" ry="8" fill="${bodyFill}" transform="rotate(-20, 50, 130)"/>
+    <ellipse cx="150" cy="130" rx="12" ry="8" fill="${bodyFill}" transform="rotate(20, 150, 130)"/>
+    <ellipse cx="80" cy="175" rx="16" ry="10" fill="${bodyFill}"/>
+    <ellipse cx="120" cy="175" rx="16" ry="10" fill="${bodyFill}"/>
+    ${color.sparkle ? '<circle cx="60" cy="70" r="3" fill="white" opacity="0.9"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/></circle><circle cx="145" cy="85" r="2.5" fill="white" opacity="0.9"><animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/></circle><circle cx="100" cy="60" r="2" fill="white" opacity="0.9"><animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite"/></circle>' : ''}
+  `;
+}
+
+function checkAnswer() {
+  const input = document.getElementById('answerInput');
+  const val = parseInt(input.value);
+  if (isNaN(val)) { input.focus(); return; }
+
+  state.questionsAnswered++;
+
+  if (val === state.currentAnswer) {
+    handleCorrect(input);
+  } else {
+    handleWrong(input, val);
+  }
+}
+
+function handleCorrect(input) {
+  state.questionsCorrect++;
+  state.streak++;
+  if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+
+  input.classList.add('correct');
+  const msg = CORRECT_MESSAGES[randInt(0, CORRECT_MESSAGES.length - 1)];
+  const fb = document.getElementById('feedback');
+  fb.textContent = msg;
+  fb.className = 'feedback correct-fb';
+
+  const labubu = pickLabubu();
+  state.score += labubu.earnedPoints;
+  state.collection.push(labubu);
+  updateUI();
+
+  spawnParticles(input);
+
+  setTimeout(() => {
+    showReward(labubu);
+  }, 600);
+}
+
+function handleWrong(input, givenAnswer) {
+  state.streak = 0;
+  input.classList.add('wrong');
+  const msg = WRONG_MESSAGES[randInt(0, WRONG_MESSAGES.length - 1)];
+  const fb = document.getElementById('feedback');
+  fb.textContent = msg;
+  fb.className = 'feedback wrong-fb';
+  document.getElementById('correctReveal').textContent =
+    `${state.num1} × ${state.num2} = ${state.currentAnswer}`;
+  updateUI();
+
+  setTimeout(() => {
+    if (state.questionsAnswered >= state.totalQuestions) {
+      endGame();
+    } else {
+      generateQuestion();
+    }
+  }, 2200);
+}
+
+function showReward(labubu) {
+  const overlay = document.getElementById('rewardOverlay');
+  document.getElementById('rewardLabubuSvg').innerHTML = generateLabubuSVG(labubu);
+  document.getElementById('rewardName').textContent = labubu.name;
+  document.getElementById('rewardName').style.color = labubu.rainbow ? '#E91E8C' : labubu.body;
+  document.getElementById('rewardPoints').textContent = `+${labubu.earnedPoints} points!`;
+  const rarityLabel = labubu.rarity === 'legendary' ? '🌟 LEGENDARY!' :
+                      labubu.rarity === 'rare' ? '✨ Rare!' :
+                      labubu.rarity === 'uncommon' ? '💫 Uncommon' : '⭐ Nice!';
+  document.getElementById('rewardMessage').textContent = rarityLabel;
+  overlay.classList.add('active');
+  spawnConfetti();
+}
+
+function closeReward() {
+  document.getElementById('rewardOverlay').classList.remove('active');
+  if (state.questionsAnswered >= state.totalQuestions) {
+    endGame();
+  } else {
+    generateQuestion();
+  }
+}
+
+function updateUI() {
+  document.getElementById('score').textContent = state.score;
+  document.getElementById('streak').textContent = state.streak;
+
+  const grid = document.getElementById('collectionGrid');
+  grid.innerHTML = '';
+  if (state.collection.length === 0) {
+    grid.innerHTML = '<div class="empty-collection">Answer questions correctly to collect Labubus!</div>';
+  } else {
+    state.collection.forEach((lab, i) => {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 200 200');
+      svg.classList.add('collected-labubu');
+      svg.innerHTML = generateLabubuSVG(lab);
+      svg.title = `${lab.name} (+${lab.earnedPoints} pts)`;
+      grid.appendChild(svg);
+    });
+  }
+  document.getElementById('collectionCount').textContent = `${state.collection.length} collected`;
+}
+
+function endGame() {
+  showScreen('gameover');
+  document.getElementById('finalScore').textContent = `⭐ ${state.score} Points!`;
+  const pct = state.questionsAnswered > 0
+    ? Math.round((state.questionsCorrect / state.questionsAnswered) * 100) : 0;
+  document.getElementById('finalStats').innerHTML = `
+    Questions: ${state.questionsAnswered} &nbsp;|&nbsp;
+    Correct: ${state.questionsCorrect} (${pct}%)<br>
+    Best Streak: 🔥 ${state.bestStreak} &nbsp;|&nbsp;
+    Labubus: 🧸 ${state.collection.length}
+  `;
+  const fc = document.getElementById('finalCollection');
+  fc.innerHTML = '';
+  state.collection.forEach(lab => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 200 200');
+    svg.classList.add('collected-labubu');
+    svg.innerHTML = generateLabubuSVG(lab);
+    fc.appendChild(svg);
+  });
+  spawnConfetti();
+}
+
+function spawnConfetti() {
+  const colors = ['#F58426', '#006BB6', '#FFD700', '#E91E8C', '#9B59B6', '#4ade80', '#3498DB'];
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.classList.add('confetti-piece');
+    piece.style.left = randInt(0, 100) + 'vw';
+    piece.style.top = '-10px';
+    piece.style.width = randInt(6, 12) + 'px';
+    piece.style.height = randInt(6, 12) + 'px';
+    piece.style.background = colors[randInt(0, colors.length - 1)];
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    piece.style.setProperty('--fall-dur', (randInt(15, 35) / 10) + 's');
+    piece.style.animationDelay = (randInt(0, 20) / 10) + 's';
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 5000);
+  }
+}
+
+function spawnParticles(element) {
+  const rect = element.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const colors = ['#FFD700', '#F58426', '#E91E8C', '#4ade80', '#006BB6'];
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.classList.add('particle');
+    p.style.left = cx + 'px';
+    p.style.top = cy + 'px';
+    p.style.width = randInt(5, 10) + 'px';
+    p.style.height = p.style.width;
+    p.style.background = colors[randInt(0, colors.length - 1)];
+    const angle = (Math.PI * 2 * i) / 12;
+    const dist = randInt(40, 100);
+    p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+    p.style.setProperty('--dur', '0.7s');
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 800);
+  }
+}
+
+// Stars background
+(function createStars() {
+  const container = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const star = document.createElement('div');
+    star.classList.add('star');
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.setProperty('--dur', (2 + Math.random() * 4) + 's');
+    star.style.animationDelay = Math.random() * 4 + 's';
+    star.style.width = (1.5 + Math.random() * 2.5) + 'px';
+    star.style.height = star.style.width;
+    container.appendChild(star);
+  }
+})();
+
+document.getElementById('answerInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkAnswer();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('rewardOverlay').classList.contains('active')) {
+    closeReward();
+  }
+});
+</script>
+
+</body>
+</html>
