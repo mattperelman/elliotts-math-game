@@ -573,7 +573,7 @@
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     pointer-events: none;
-    z-index: 0;
+    z-index: 2;
     overflow: hidden;
   }
 
@@ -584,27 +584,29 @@
     align-items: center;
     animation: playerFloat var(--float-dur) ease-in-out infinite;
     animation-delay: var(--float-delay);
-    opacity: 0.18;
-    transition: opacity 0.3s;
+    opacity: 0.35;
+    pointer-events: auto;
+    transition: opacity 0.3s, transform 0.3s;
   }
 
   .player-jersey:hover {
-    opacity: 0.45;
+    opacity: 0.7;
+    transform: scale(1.15);
   }
 
   .jersey-svg {
-    width: var(--jersey-size, 80px);
-    height: var(--jersey-size, 80px);
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    width: var(--jersey-size, 90px);
+    height: var(--jersey-size, 90px);
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
   }
 
   .player-name {
     font-family: 'Fredoka One', cursive;
-    font-size: var(--name-size, 0.65rem);
+    font-size: var(--name-size, 0.7rem);
     color: white;
-    margin-top: 2px;
+    margin-top: 4px;
     text-align: center;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
     letter-spacing: 1px;
     text-transform: uppercase;
   }
@@ -614,9 +616,9 @@
     50% { transform: translateY(var(--float-dist, -18px)) rotate(var(--rot-b, 3deg)); }
   }
 
-  /* Responsive: hide some players on small screens */
+  /* Responsive: smaller jerseys on small screens */
   @media (max-width: 768px) {
-    .player-jersey { --jersey-size: 55px; --name-size: 0.5rem; }
+    .player-jersey { --jersey-size: 60px; --name-size: 0.55rem; }
     .player-jersey.hide-mobile { display: none; }
   }
 
@@ -1150,19 +1152,22 @@ function spawnParticles(element) {
   ];
 
   function jerseySVG(number) {
-    return `<svg class="jersey-svg" viewBox="0 0 120 140">
+    return `<svg class="jersey-svg" viewBox="0 0 120 150">
       <!-- Jersey body -->
-      <path d="M20 35 L5 50 L5 65 L20 60 L20 130 Q60 140 100 130 L100 60 L115 65 L115 50 L100 35 Q85 20 75 20 L70 28 Q60 35 50 28 L45 20 Q35 20 20 35 Z" fill="#F58426" stroke="#006BB6" stroke-width="2.5"/>
-      <!-- Collar -->
-      <path d="M45 20 L50 28 Q60 35 70 28 L75 20" fill="none" stroke="#006BB6" stroke-width="2.5"/>
-      <!-- Sleeve edges -->
-      <path d="M20 60 L5 65" stroke="#006BB6" stroke-width="2"/>
-      <path d="M100 60 L115 65" stroke="#006BB6" stroke-width="2"/>
-      <!-- Number -->
-      <text x="60" y="95" text-anchor="middle" font-family="'Fredoka One',sans-serif" font-size="38" fill="#006BB6" font-weight="bold">${number}</text>
-      <!-- Side stripes -->
-      <line x1="20" y1="60" x2="20" y2="130" stroke="#006BB6" stroke-width="1.5" opacity="0.4"/>
-      <line x1="100" y1="60" x2="100" y2="130" stroke="#006BB6" stroke-width="1.5" opacity="0.4"/>
+      <path d="M20 35 L5 50 L5 65 L20 60 L20 125 Q60 135 100 125 L100 60 L115 65 L115 50 L100 35 Q85 20 75 20 L70 28 Q60 35 50 28 L45 20 Q35 20 20 35 Z" fill="#F58426" stroke="#006BB6" stroke-width="3"/>
+      <!-- Collar V-neck -->
+      <path d="M45 20 L50 28 Q60 38 70 28 L75 20" fill="#006BB6" stroke="#006BB6" stroke-width="1"/>
+      <!-- Sleeve trim -->
+      <path d="M5 50 L5 65 L20 60" fill="none" stroke="white" stroke-width="1" opacity="0.5"/>
+      <path d="M115 50 L115 65 L100 60" fill="none" stroke="white" stroke-width="1" opacity="0.5"/>
+      <!-- Number with outline -->
+      <text x="60" y="93" text-anchor="middle" font-family="'Fredoka One',sans-serif" font-size="40" fill="white" stroke="#006BB6" stroke-width="3" paint-order="stroke">${number}</text>
+      <!-- Bottom hem -->
+      <path d="M20 125 Q60 135 100 125" fill="none" stroke="#006BB6" stroke-width="2"/>
+      <!-- Basketball icon below jersey -->
+      <circle cx="60" cy="146" r="8" fill="#F58426" stroke="#c46b1a" stroke-width="1"/>
+      <path d="M52 146 Q60 140 68 146" fill="none" stroke="#c46b1a" stroke-width="0.8"/>
+      <line x1="60" y1="138" x2="60" y2="154" stroke="#c46b1a" stroke-width="0.8"/>
     </svg>`;
   }
 
