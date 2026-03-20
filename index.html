@@ -568,6 +568,58 @@
     z-index: 1;
   }
 
+  /* ── FLOATING KNICKS PLAYERS ── */
+  .knicks-players {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .player-jersey {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: playerFloat var(--float-dur) ease-in-out infinite;
+    animation-delay: var(--float-delay);
+    opacity: 0.18;
+    transition: opacity 0.3s;
+  }
+
+  .player-jersey:hover {
+    opacity: 0.45;
+  }
+
+  .jersey-svg {
+    width: var(--jersey-size, 80px);
+    height: var(--jersey-size, 80px);
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+  }
+
+  .player-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: var(--name-size, 0.65rem);
+    color: white;
+    margin-top: 2px;
+    text-align: center;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  @keyframes playerFloat {
+    0%, 100% { transform: translateY(0) rotate(var(--rot-a, -3deg)); }
+    50% { transform: translateY(var(--float-dist, -18px)) rotate(var(--rot-b, 3deg)); }
+  }
+
+  /* Responsive: hide some players on small screens */
+  @media (max-width: 768px) {
+    .player-jersey { --jersey-size: 55px; --name-size: 0.5rem; }
+    .player-jersey.hide-mobile { display: none; }
+  }
+
   /* ── PARTICLES ON CORRECT ── */
   .particle {
     position: fixed;
@@ -695,6 +747,9 @@
   <button class="btn btn-play" onclick="startGame()">Play Again!</button>
 </div>
 
+<!-- FLOATING KNICKS PLAYERS -->
+<div class="knicks-players" id="knicksPlayers"></div>
+
 <div class="knicks-badge">🏀 Go Knicks! 🧡💙</div>
 
 <script>
@@ -792,16 +847,16 @@ function startGame() {
 function getDifficultyParams() {
   const correct = state.questionsCorrect;
 
-  if (correct < 3)  return { maxFactor: 5,  minFactor: 1, label: 0 };
-  if (correct < 6)  return { maxFactor: 6,  minFactor: 1, label: 1 };
-  if (correct < 9)  return { maxFactor: 7,  minFactor: 2, label: 2 };
-  if (correct < 12) return { maxFactor: 8,  minFactor: 2, label: 3 };
-  if (correct < 15) return { maxFactor: 9,  minFactor: 2, label: 4 };
-  if (correct < 18) return { maxFactor: 10, minFactor: 3, label: 5 };
-  if (correct < 21) return { maxFactor: 11, minFactor: 3, label: 6 };
-  if (correct < 24) return { maxFactor: 12, minFactor: 4, label: 7 };
-  if (correct < 27) return { maxFactor: 12, minFactor: 5, label: 8 };
-  return { maxFactor: 12, minFactor: 6, label: 9 };
+  if (correct < 2)  return { maxFactor: 6,  minFactor: 2, label: 0 };
+  if (correct < 4)  return { maxFactor: 7,  minFactor: 2, label: 1 };
+  if (correct < 6)  return { maxFactor: 8,  minFactor: 3, label: 2 };
+  if (correct < 8)  return { maxFactor: 9,  minFactor: 3, label: 3 };
+  if (correct < 10) return { maxFactor: 10, minFactor: 3, label: 4 };
+  if (correct < 13) return { maxFactor: 10, minFactor: 4, label: 5 };
+  if (correct < 16) return { maxFactor: 11, minFactor: 5, label: 6 };
+  if (correct < 19) return { maxFactor: 12, minFactor: 5, label: 7 };
+  if (correct < 22) return { maxFactor: 12, minFactor: 6, label: 8 };
+  return { maxFactor: 12, minFactor: 7, label: 9 };
 }
 
 function randInt(min, max) {
@@ -827,7 +882,7 @@ function generateQuestion() {
   const levelName = LEVEL_NAMES[levelIdx] || LEVEL_NAMES[LEVEL_NAMES.length - 1];
   document.getElementById('levelDisplay').textContent = `Level ${levelIdx + 1} - ${levelName}`;
 
-  const pct = Math.min(100, ((state.questionsCorrect) / 27) * 100);
+  const pct = Math.min(100, ((state.questionsCorrect) / 22) * 100);
   document.getElementById('difficultyBar').style.width = pct + '%';
 
   document.getElementById('answerInput').focus();
@@ -1068,6 +1123,69 @@ function spawnParticles(element) {
     star.style.height = star.style.width;
     container.appendChild(star);
   }
+})();
+
+// Knicks players floating around the screen
+(function createKnicksPlayers() {
+  const players = [
+    { name: 'Brunson', number: 11 },
+    { name: 'Hart', number: 3 },
+    { name: 'OG', number: 8 },
+    { name: 'Bridges', number: 1 },
+    { name: 'Towns', number: 32 },
+    { name: 'Brunson', number: 11 },
+    { name: 'Hart', number: 3 },
+    { name: 'OG', number: 8 },
+  ];
+
+  const positions = [
+    { top: '8%',  left: '3%' },
+    { top: '30%', left: '2%' },
+    { top: '55%', left: '4%' },
+    { top: '78%', left: '2%' },
+    { top: '10%', right: '3%' },
+    { top: '35%', right: '2%' },
+    { top: '60%', right: '4%' },
+    { top: '82%', right: '2%' },
+  ];
+
+  function jerseySVG(number) {
+    return `<svg class="jersey-svg" viewBox="0 0 120 140">
+      <!-- Jersey body -->
+      <path d="M20 35 L5 50 L5 65 L20 60 L20 130 Q60 140 100 130 L100 60 L115 65 L115 50 L100 35 Q85 20 75 20 L70 28 Q60 35 50 28 L45 20 Q35 20 20 35 Z" fill="#F58426" stroke="#006BB6" stroke-width="2.5"/>
+      <!-- Collar -->
+      <path d="M45 20 L50 28 Q60 35 70 28 L75 20" fill="none" stroke="#006BB6" stroke-width="2.5"/>
+      <!-- Sleeve edges -->
+      <path d="M20 60 L5 65" stroke="#006BB6" stroke-width="2"/>
+      <path d="M100 60 L115 65" stroke="#006BB6" stroke-width="2"/>
+      <!-- Number -->
+      <text x="60" y="95" text-anchor="middle" font-family="'Fredoka One',sans-serif" font-size="38" fill="#006BB6" font-weight="bold">${number}</text>
+      <!-- Side stripes -->
+      <line x1="20" y1="60" x2="20" y2="130" stroke="#006BB6" stroke-width="1.5" opacity="0.4"/>
+      <line x1="100" y1="60" x2="100" y2="130" stroke="#006BB6" stroke-width="1.5" opacity="0.4"/>
+    </svg>`;
+  }
+
+  const container = document.getElementById('knicksPlayers');
+  players.forEach((player, i) => {
+    const pos = positions[i];
+    const div = document.createElement('div');
+    div.classList.add('player-jersey');
+    if (i >= 6) div.classList.add('hide-mobile');
+
+    div.style.setProperty('--float-dur', (4 + Math.random() * 3) + 's');
+    div.style.setProperty('--float-delay', (Math.random() * 3) + 's');
+    div.style.setProperty('--float-dist', (-12 - Math.random() * 16) + 'px');
+    div.style.setProperty('--rot-a', (-2 - Math.random() * 4) + 'deg');
+    div.style.setProperty('--rot-b', (2 + Math.random() * 4) + 'deg');
+
+    if (pos.top) div.style.top = pos.top;
+    if (pos.left) div.style.left = pos.left;
+    if (pos.right) div.style.right = pos.right;
+
+    div.innerHTML = jerseySVG(player.number) + `<span class="player-name">${player.name}</span>`;
+    container.appendChild(div);
+  });
 })();
 
 document.getElementById('answerInput').addEventListener('keydown', e => {
